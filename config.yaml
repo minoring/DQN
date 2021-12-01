@@ -1,0 +1,29 @@
+env:
+  screen_size: 84
+  frame_skip: 1
+  noop_max: 30
+  terminal_on_life_loss: False
+replay_memory_size: 1000000
+agent_history_length: 4
+train:
+  # total_frame: 3000 # Change to 5M frames
+  total_frame: 100000 # Change to 5M frames
+  replay_start_size: 5000
+  # replay_start_size: 500
+  minibatch_size: 32
+  discount_factor: 0.99
+  # learning_rate: 0.00025
+  learning_rate: 0.01
+  gradient_momentum: 0.95
+  squared_gradient_momentum: 0.95 # How can I set in PyTorch?
+  min_squared_gradient: 0.01 # This one too.
+  initial_exploration: 1
+  final_exploration: 0.1
+  # target_network_update_frequency: 10000
+  target_network_update_frequency: 100
+exploration:
+  initial_exploration: 1
+  # final_exploration: 0.1
+  final_exploration: 0.01
+  # final_exploration_frame: 1000000
+  final_exploration_frame: 100
