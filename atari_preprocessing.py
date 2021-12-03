@@ -29,8 +29,8 @@ class AtariPreprocessing(gym.Wrapper):
         self.is_training = is_training
 
         self.screen_size = self.config['env']['screen_size']
-        shape = (self.screen_size, self.screen_size)
-        self.observation_space = Box(low=0, high=1, shape=shape, dtype=np.float32)
+        self.obs_shape = (self.screen_size, self.screen_size)
+        self.observation_space = Box(low=0, high=255, shape=self.obs_shape, dtype=np.uint8)
         self.ep_reward = 0  # Cummulative reward in this eposide.
 
     def step(self, action):
@@ -44,9 +44,8 @@ class AtariPreprocessing(gym.Wrapper):
                 self.obs_buffer[1] = self._get_screen_grayscale()
             elif t == self.frame_skip:
                 self.obs_buffer[0] = self._get_screen_grayscale()
-        # TODO(minho): Use reward clipping.
-        # if self.is_training:
-        #     R = AtariPreprocessing._clip_reward(R)
+        if self.is_training:
+            R = AtariPreprocessing._clip_reward(R)
 
         self.ep_reward += R
         return self._pool_and_resize(), R, done, info
@@ -56,7 +55,6 @@ class AtariPreprocessing(gym.Wrapper):
         self.ep_reward = 0
         # TODO(minho): Reset on live loss?
         # self.lives = self.ale.lives()
-
         # TODO(minho): Implement NOOP?
 
         self.obs_buffer[0] = self._get_screen_grayscale()
@@ -69,8 +67,7 @@ class AtariPreprocessing(gym.Wrapper):
 
         resized_img = cv2.resize(self.obs_buffer[0], (self.screen_size, self.screen_size),
                                  interpolation=cv2.INTER_AREA)
-        obs = resized_img / 255.0
-        return obs
+        return resized_img
 
     def _clip_reward(reward):
         if reward > 0:
@@ -80,9 +77,9 @@ class AtariPreprocessing(gym.Wrapper):
         return 0
 
     def _get_screen_grayscale(self):
-        screen = None
         if self.ale is not None:
-            screen = self.ale.getScreenGrayscale(screen)
+            screen = np.empty(self.env.observation_space.shape[:2], dtype=np.uint8)
+            self.ale.getScreenGrayscale(screen)
         else:
             screen = self.env.render(mode='rgb_array')
             screen = cv2.cvtColor(screen, cv2.COLOR_RGB2GRAY)

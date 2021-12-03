@@ -1,9 +1,10 @@
+import random
+
 import yaml
 import torch
 import numpy as np
 import torch.nn as nn
 import torch.optim as optim
-from tqdm import tqdm
 
 import pytorch_utils as ptu
 from pytorch_utils import device
@@ -17,6 +18,7 @@ from logger import Logger
 
 def main():
     args = get_args()
+
     with open(args.config, 'r') as f:
         config = yaml.safe_load(f)
 
@@ -24,6 +26,13 @@ def main():
 
     env = get_default_env_by_name(args.env)
     env = AtariPreprocessing(env, config, is_training=True)
+
+    # Set random seeds.
+    torch.manual_seed(args.seed)
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    env.seed(args.seed)
+
     agent = DQN(config, env.action_space.n)
     target_network = DQN(config, env.action_space.n)
     target_network.load_state_dict(agent.state_dict())
@@ -33,14 +42,14 @@ def main():
 
     memory = ReplayMemory(config['replay_memory_size'], config['agent_history_length'])
     criterion = nn.HuberLoss(reduction='sum')
-    optimizer = optim.RMSprop(agent.parameters(),
-                              lr=config['train']['learning_rate'],
-                              momentum=config['train']['gradient_momentum'])
-
+    # optimizer = optim.RMSprop(agent.parameters(),
+    #                           lr=config['train']['learning_rate'],
+    #                           momentum=config['train']['gradient_momentum'])
+    optimizer = optim.Adam(agent.parameters(), lr=config['train']['learning_rate'])
     frame = env.reset()
     done = False
     num_updates = 0
-    for frame_idx in tqdm(range(1, config['train']['total_frame'] + 1)):
+    for frame_idx in range(1, config['train']['total_frame'] + 1):
         # A uniform random policy is run for this number of frames before learning starts
         if frame_idx < config['train']['replay_start_size']:
             action = env.action_space.sample()
@@ -56,7 +65,6 @@ def main():
             logger.log_ep_reward(env.ep_reward)
             frame = env.reset()
             memory.frame_queue.clear()
-
         if frame_idx < config['train']['replay_start_size']:
             # No training in this case
             continue
@@ -69,10 +77,10 @@ def main():
         non_terminal_next_state_mask = torch.tensor([s is not None for s in batch.next_state],
                                                     device=device,
                                                     dtype=torch.bool)
-        non_terminal_next_state = ptu.from_numpy(
+        non_terminal_next_state = ptu.from_img(
             np.stack([s for s in batch.next_state if s is not None]))
 
-        state = ptu.from_tuple(batch.state)
+        state = ptu.from_img(np.array(batch.state))
         action = torch.tensor(batch.action).to(device).unsqueeze(-1)
         action_value = agent(state).gather(1, action)
 
@@ -88,7 +96,12 @@ def main():
 
         if num_updates % config['train']['target_network_update_frequency'] == 0:
             target_network.load_state_dict(agent.state_dict())
-        print(loss)
+
+        if num_updates % args.log_interval == 0:
+            total_frame = config['train']['total_frame'] + 1
+            print("frame {}/{} ({:.2f}%), loss: {:.6f}".format(frame_idx, total_frame,
+                                                               frame_idx / total_frame * 100.,
+                                                               loss.item()))
 
     logger.save()
     torch.save(agent.state_dict(), args.model_save_path)

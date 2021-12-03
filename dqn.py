@@ -50,12 +50,9 @@ class DQN(nn.Module):
             # We take exploratory action with epsilon probability or
             # we can not create state since frame queue is not filled.
             return random.randrange(self.action_space)
-
         # Greedy action selection
         with torch.no_grad():
-            if frame_idx >= 20000:
-                import pdb; pdb.set_trace()
-            state = ptu.from_tuple(frame_queue.stack()).unsqueeze(0)
+            state = ptu.from_img(frame_queue.stack()).unsqueeze(0)
             return torch.argmax(self(state)).item()
 
     def _compute_conv2d_size_out(self, input_size, kernel_size, stride):

@@ -2,7 +2,7 @@
 
 ## (Working in Progress...)
 
-This project implement DQN paper in Atari 2600 environment. The goal is to train an agent as similar as possible to original paper [DQN nature](https://www.nature.com/articles/nature14236) (such as preprocessing, frame skip, other hyperparameters...).
+This project implement DQN paper in Atari 2600 environment. The goal is to train an agent as similar as possible to original paper [DQN nature](https://www.nature.com/articles/nature14236) (such as preprocessing, frame skip, other hyperparameters... though there are some modification for practical reasons).
 
 ## Requirements
 ```

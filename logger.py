@@ -13,7 +13,7 @@ class Logger:
         self.ep = 0
         self.ep_rewards = []
 
-        self.log_dir = os.path.join(log_dir, time.strftime("%d-%m-%Y_%H-%M-%S"))
+        self.log_dir = os.path.join(log_dir, env_name + '_' + time.strftime("%d-%m-%Y_%H-%M-%S"))
         self.writer = SummaryWriter(self.log_dir)
 
     def log_ep_reward(self, reward):
