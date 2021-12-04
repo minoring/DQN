@@ -9,6 +9,7 @@ class ReplayMemory:
     def __init__(self, replay_memory_size, agent_history_length):
         self.memory = deque([], maxlen=replay_memory_size)
         self.frame_queue = FrameQueue(agent_history_length)
+        self.heldout_states = None  # Should be sample from replay memory.
 
     def push(self, frame, action, next_frame, reward):
         """Save transition"""
@@ -25,6 +26,15 @@ class ReplayMemory:
 
     def sample(self, batch_size):
         return random.sample(self.memory, batch_size)
+
+    def get_heldout_states(self, heldout_states_size):
+        if self.heldout_states is None:
+            # If it is None, heldout states are never defined, we sample from our memory.
+            sample = self.sample(heldout_states_size)
+            batch = Transition(*zip(*sample))
+            self.heldout_states = batch.state
+        assert len(self.heldout_states) == heldout_states_size
+        return self.heldout_states
 
     def __len__(self):
         return len(self.memory)

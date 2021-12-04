@@ -37,15 +37,7 @@ class DQN(nn.Module):
         return self.output(x)
 
     def eps_action_selection(self, frame_idx, frame_queue):
-        if frame_idx > self.config['exploration']['final_exploration_frame']:
-            eps = self.config['exploration']['final_exploration']
-        else:
-            init_eps = self.config['exploration']['initial_exploration']
-            fin_eps = self.config['exploration']['final_exploration']
-            fin_expr_frame = self.config['exploration']['final_exploration_frame']
-
-            eps = init_eps - (init_eps - fin_eps) / fin_expr_frame * frame_idx
-
+        eps = self.compute_epsilon(frame_idx)
         if random.random() <= eps or not frame_queue.filled():
             # We take exploratory action with epsilon probability or
             # we can not create state since frame queue is not filled.
@@ -54,6 +46,17 @@ class DQN(nn.Module):
         with torch.no_grad():
             state = ptu.from_img(frame_queue.stack()).unsqueeze(0)
             return torch.argmax(self(state)).item()
+
+    def compute_epsilon(self, frame_idx):
+        if frame_idx > self.config['exploration']['final_exploration_frame']:
+            eps = self.config['exploration']['final_exploration']
+        else:
+            init_eps = self.config['exploration']['initial_exploration']
+            fin_eps = self.config['exploration']['final_exploration']
+            fin_expr_frame = self.config['exploration']['final_exploration_frame']
+
+            eps = init_eps - (init_eps - fin_eps) / fin_expr_frame * frame_idx
+        return eps
 
     def _compute_conv2d_size_out(self, input_size, kernel_size, stride):
         return (input_size - (kernel_size - 1) - 1) // stride + 1

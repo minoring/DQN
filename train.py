@@ -22,7 +22,7 @@ def main():
     with open(args.config, 'r') as f:
         config = yaml.safe_load(f)
 
-    logger = Logger(args.env, args.log_csv_path, args.log_dir)
+    train_logger = Logger(args.env, args.log_csv_path, args.log_dir, split='train')
 
     env = get_default_env_by_name(args.env)
     env = AtariPreprocessing(env, config, is_training=True)
@@ -45,7 +45,7 @@ def main():
     # optimizer = optim.RMSprop(agent.parameters(),
     #                           lr=config['train']['learning_rate'],
     #                           momentum=config['train']['gradient_momentum'])
-    optimizer = optim.Adam(agent.parameters(), lr=config['train']['learning_rate'])
+    optimizer = optim.Adam(agent.parameters())
     frame = env.reset()
     done = False
     num_updates = 0
@@ -62,7 +62,7 @@ def main():
         memory.push(frame, action, next_frame, reward)
         frame = next_frame
         if done:
-            logger.log_ep_reward(env.ep_reward)
+            train_logger.log_ep_reward(env.ep_reward)
             frame = env.reset()
             memory.frame_queue.clear()
         if frame_idx < config['train']['replay_start_size']:
@@ -98,12 +98,20 @@ def main():
             target_network.load_state_dict(agent.state_dict())
 
         if num_updates % args.log_interval == 0:
+            loss = loss.item()
+            train_logger.log_scalar('NumUpdateStepLoss', loss, num_updates)
+            train_logger.log_scalar('Epsilon', agent.compute_epsilon(frame_idx), frame_idx)
+
+            if num_updates >= config['debug']['heldout_step']:
+                heldout_states = memory.get_heldout_states(config['debug']['heldout_state_size'])
+                train_logger.log_q(agent, heldout_states, config['debug']['heldout_minibatch_size'],
+                                   num_updates)
+
             total_frame = config['train']['total_frame'] + 1
             print("frame {}/{} ({:.2f}%), loss: {:.6f}".format(frame_idx, total_frame,
                                                                frame_idx / total_frame * 100.,
-                                                               loss.item()))
-
-    logger.save()
+                                                               loss))
+    train_logger.save()
     torch.save(agent.state_dict(), args.model_save_path)
     env.close()
 

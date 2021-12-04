@@ -3,14 +3,11 @@ env:
   frame_skip: 4
   noop_max: 30
   terminal_on_life_loss: False
-replay_memory_size: 500000 # Original paper was 1000000.
+replay_memory_size: 350000 # Original paper was 1000000.
 agent_history_length: 3 # Original paper was four. I use three to save memory.
 train:
-  # total_frame: 3000 # Change to 5M frames
-  # total_frame: 100000 # Change to 5M frames
   total_frame: 5000000 # Change to 5M frames
   replay_start_size: 5000
-  # minibatch_size: 32
   minibatch_size: 128 # Original paper was 32.
   discount_factor: 0.99
   learning_rate: 0.00025
@@ -22,3 +19,7 @@ exploration:
   initial_exploration: 1
   final_exploration: 0.1
   final_exploration_frame: 1000000
+debug:
+  heldout_step: 100000 # Number of steps to train before get heldout set.
+  heldout_minibatch_size: 512
+  heldout_state_size: 32768 # 2^15
