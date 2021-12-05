@@ -1,6 +1,7 @@
 import os
 import time
 
+import torch
 import numpy as np
 import pandas as pd
 from torch.utils.tensorboard import SummaryWriter
@@ -29,25 +30,26 @@ class Logger:
         self.writer.add_scalar(f'{name}/{self.split}', scalar, step)
 
     def log_q(self, agent, heldout_states, minibatch_size, step):
-        state_shape = heldout_states[0].shape
-        minibatch_heldout_states = np.array(heldout_states).reshape(-1, minibatch_size,
-                                                                    *state_shape)
-        accum_max_q = 0
-        accum_min_q = 0
-        for heldout_state in minibatch_heldout_states:
-            Q = agent(ptu.from_img(heldout_state))
-            accum_max_q += Q.max(dim=1).values.sum().item()
-            accum_min_q += Q.min(dim=1).values.sum().item()
+        with torch.no_grad():
+            state_shape = heldout_states[0].shape
+            minibatch_heldout_states = np.array(heldout_states).reshape(-1, minibatch_size,
+                                                                        *state_shape)
+            accum_max_q = 0
+            accum_min_q = 0
+            for heldout_state in minibatch_heldout_states:
+                Q = agent(ptu.from_img(heldout_state))
+                accum_max_q += Q.max(dim=1).values.sum().item()
+                accum_min_q += Q.min(dim=1).values.sum().item()
 
-        average_max_q = accum_max_q / len(heldout_states)
-        average_min_q = accum_min_q / len(heldout_states)
-        self.log_scalar('AverageMaxQ', average_max_q, step)
-        self.log_scalar('AverageMinQ', average_min_q, step)
+            average_max_q = accum_max_q / len(heldout_states)
+            average_min_q = accum_min_q / len(heldout_states)
+            self.log_scalar('AverageMaxQ', average_max_q, step)
+            self.log_scalar('AverageMinQ', average_min_q, step)
 
     def save(self):
         split = [self.split] * self.ep
         env_names = [self.env_name] * self.ep
-        ep_idxs = list(range(1, self.ep))
+        ep_idxs = list(range(1, self.ep + 1))
         df = pd.DataFrame(list(zip(split, env_names, ep_idxs, self.ep_rewards)))
 
         df.to_csv(self.log_csv_path, mode='a')

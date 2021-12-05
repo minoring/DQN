@@ -6,9 +6,10 @@ env:
 replay_memory_size: 350000 # Original paper was 1000000.
 agent_history_length: 3 # Original paper was four. I use three to save memory.
 train:
-  total_frame: 5000000 # Change to 5M frames
-  replay_start_size: 5000
-  minibatch_size: 128 # Original paper was 32.
+  total_frame: 10000000 # 10M frames. Experiment setting of extended Data Table 3.
+  replay_start_size: 50000
+  update_frequency: 4 # The number of actions selected by the agent between successive SGD updates.
+  minibatch_size: 32 # Original paper was 32.
   discount_factor: 0.99
   learning_rate: 0.00025
   gradient_momentum: 0.95

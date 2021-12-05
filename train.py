@@ -9,7 +9,7 @@ import torch.optim as optim
 import pytorch_utils as ptu
 from pytorch_utils import device
 from atari_preprocessing import AtariPreprocessing
-from parse_utils import get_args
+from parse_utils import get_train_args
 from env_utils import get_default_env_by_name
 from dqn import DQN
 from replay_memory import ReplayMemory, Transition
@@ -17,7 +17,7 @@ from logger import Logger
 
 
 def main():
-    args = get_args()
+    args = get_train_args()
 
     with open(args.config, 'r') as f:
         config = yaml.safe_load(f)
@@ -42,10 +42,12 @@ def main():
 
     memory = ReplayMemory(config['replay_memory_size'], config['agent_history_length'])
     criterion = nn.HuberLoss(reduction='sum')
-    # optimizer = optim.RMSprop(agent.parameters(),
-    #                           lr=config['train']['learning_rate'],
-    #                           momentum=config['train']['gradient_momentum'])
-    optimizer = optim.Adam(agent.parameters())
+    # Not exact same form of RMSProp.
+    # Take a look at how Deepmind calculated RMSProp.
+    # https://github.com/deepmind/dqn/blob/master/dqn/NeuralQLearner.lua#L266
+    optimizer = optim.RMSprop(agent.parameters(),
+                              lr=config['train']['learning_rate'],
+                              alpha=config['train']['gradient_momentum'])
     frame = env.reset()
     done = False
     num_updates = 0
@@ -67,6 +69,9 @@ def main():
             memory.frame_queue.clear()
         if frame_idx < config['train']['replay_start_size']:
             # No training in this case
+            continue
+        if frame_idx % config['train']['update_frequency'] != 0:
+            # Select "update_frequency" actions before SGD updates.
             continue
 
         sample = memory.sample(config['train']['minibatch_size'])
@@ -107,12 +112,13 @@ def main():
                 train_logger.log_q(agent, heldout_states, config['debug']['heldout_minibatch_size'],
                                    num_updates)
 
-            total_frame = config['train']['total_frame'] + 1
+            total_frame = config['train']['total_frame']
             print("frame {}/{} ({:.2f}%), loss: {:.6f}".format(frame_idx, total_frame,
                                                                frame_idx / total_frame * 100.,
                                                                loss))
     train_logger.save()
     torch.save(agent.state_dict(), args.model_save_path)
+    print(f'model saved at: {args.model_save_path}')
     env.close()
 
 
