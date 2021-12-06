@@ -36,8 +36,7 @@ class DQN(nn.Module):
         x = F.relu(self.fc1(x))
         return self.output(x)
 
-    def eps_action_selection(self, frame_idx, frame_queue):
-        eps = self.compute_epsilon(frame_idx)
+    def eps_action_selection(self, eps, frame_queue):
         if random.random() <= eps or not frame_queue.filled():
             # We take exploratory action with epsilon probability or
             # we can not create state since frame queue is not filled.

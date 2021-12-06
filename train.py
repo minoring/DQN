@@ -51,12 +51,15 @@ def main():
     frame = env.reset()
     done = False
     num_updates = 0
+    moving_average_loss = 0
+    moving_average_episode_reward = 0
     for frame_idx in range(1, config['train']['total_frame'] + 1):
         # A uniform random policy is run for this number of frames before learning starts
         if frame_idx < config['train']['replay_start_size']:
             action = env.action_space.sample()
         else:
-            action = agent.eps_action_selection(frame_idx, memory.frame_queue)
+            eps = agent.compute_epsilon(frame_idx)
+            action = agent.eps_action_selection(eps, memory.frame_queue)
 
         next_frame, reward, done, _ = env.step(action)
         if done:
@@ -65,6 +68,10 @@ def main():
         frame = next_frame
         if done:
             train_logger.log_ep_reward(env.ep_reward)
+            moving_average_episode_reward = moving_average_episode_reward + 0.001 * (
+                env.ep_reward - moving_average_episode_reward)
+            train_logger.log_scalar('MovingAverageEpisodeReward', moving_average_episode_reward,
+                                    frame_idx)
             frame = env.reset()
             memory.frame_queue.clear()
         if frame_idx < config['train']['replay_start_size']:
@@ -98,6 +105,7 @@ def main():
         loss.backward()
         optimizer.step()
         num_updates += 1
+        moving_average_loss = moving_average_loss + 0.0001 * (loss.item() - moving_average_loss)
 
         if num_updates % config['train']['target_network_update_frequency'] == 0:
             target_network.load_state_dict(agent.state_dict())
@@ -105,6 +113,7 @@ def main():
         if num_updates % args.log_interval == 0:
             loss = loss.item()
             train_logger.log_scalar('NumUpdateStepLoss', loss, num_updates)
+            train_logger.log_scalar('NumUpdateMovingAverageLoss', moving_average_loss, num_updates)
             train_logger.log_scalar('Epsilon', agent.compute_epsilon(frame_idx), frame_idx)
 
             if num_updates >= config['debug']['heldout_step']:
@@ -113,9 +122,8 @@ def main():
                                    num_updates)
 
             total_frame = config['train']['total_frame']
-            print("frame {}/{} ({:.2f}%), loss: {:.6f}".format(frame_idx, total_frame,
-                                                               frame_idx / total_frame * 100.,
-                                                               loss))
+            print("frame {}/{} ({:.2f}%), minibatch loss: {:.6f}".format(
+                frame_idx, total_frame, frame_idx / total_frame * 100., loss))
     train_logger.save()
     torch.save(agent.state_dict(), args.model_save_path)
     print(f'model saved at: {args.model_save_path}')

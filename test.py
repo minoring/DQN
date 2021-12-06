@@ -1,6 +1,7 @@
 import yaml
 import torch
 import pandas as pd
+import numpy as np
 from gym.wrappers import RecordVideo
 
 from atari_preprocessing import AtariPreprocessing
@@ -29,7 +30,7 @@ def main():
     with open(args.config, 'r') as f:
         config = yaml.safe_load(f)
 
-    env = get_default_env_by_name(args.env)
+    env = get_default_env_by_name(args.env, render_mode=args.render_mode)
     env = AtariPreprocessing(env, config, is_training=False)
     agent = DQN(config, env.action_space.n)
     agent.load_state_dict(torch.load(args.trained_model_path))
@@ -46,17 +47,10 @@ def main():
             env = RecordVideo(env, video_save_folder)
             print(f'video saved at: {video_save_folder}')
 
-        # Fill out frame queue before run.
-        for _ in range(config['agent_history_length']):
-            action = env.action_space.sample()
-            frame, _, _, _ = env.step(action)
-            frame_queue.push(frame)
-
         done = False
         episode_reward = 0
         while not done:
-            state = ptu.from_img(frame_queue.stack()).unsqueeze(0)
-            action = agent(state).argmax().item()
+            action = agent.eps_action_selection(eps=0.05, frame_queue=frame_queue)
             frame, reward, done, _ = env.step(action)
 
             episode_reward += reward
@@ -66,6 +60,9 @@ def main():
         epsiode_rewards.append(episode_reward)
         env.reset()
         frame_queue.clear()
+
+    print(f'Average score for {args.num_test_run} games: {np.mean(epsiode_rewards)}')
+    print(f'Standard deviation score for {args.num_test_run} games: {np.std(epsiode_rewards)}')
     save_csv(epsiode_rewards, args.env, args.log_csv_path)
 
 

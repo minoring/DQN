@@ -27,9 +27,8 @@ def get_test_args():
     parser.add_argument('--env', '-e', help='Environment of RL algorithm', required=True)
     parser.add_argument('--num-test-run', help='Number of test run', type=int, default=10)
     parser.add_argument('--config', '-c', help='Path to config file', default='config.yaml')
-    parser.add_argument('--record-video',
-                        help='Wheter to save video files',
-                        action='store_true')
+    parser.add_argument('--record-video', help='Wheter to save video files', action='store_true')
+    parser.add_argument('--render-mode', help='Render mode of gym environment')
     parser.add_argument('--log-csv-path', help='Path to csv file to save log', default='log.csv')
 
     args = parser.parse_args()

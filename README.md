@@ -12,6 +12,23 @@ torch               1.10.0
 torchvision         0.11.1
 ```
 
+## Results
+
+## Game Score
+DQN agent were tranined for 10 milion frames. Scores for each game are average over 10 episodes.
+
+After training, run
+`python test.py --env {env_name} --trained-mode-path {trained_model_path} --record-video` to compute average game score and record video (e.g.`python test.py --env ALE/Enduro-v5 --trained-model-path trained_model/Enduro.pt --record-video`). Add `--render-mode human` to test in interactive environment. Flags are defined in `get_test_args` function in [`parse_utils.py`](parse_utils.py).
+
+
+Game | DQN (std)
+:---:|:---:
+Breakout | 97.3 (76.9)
+Enduro | 275.1 (61.0)
+Space Invaders | 313.0 (118.4)
+
+
+
 ## ROMs
 - Download Atari 2600 [roms](http://www.atarimania.com/rom_collection_archive_atari_2600_roms.html), unzip, place files below in [`ROMS`](ROMS) directory.
 	- Breakout - Breakaway IV (Paddle) (1978) (Atari, Brad Stewart - Sears) (CX2622 - 6-99813, 49-75107) ~.bin
