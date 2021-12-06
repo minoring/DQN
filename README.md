@@ -13,6 +13,11 @@ torchvision         0.11.1
 ```
 
 ## Results
+## Video
+| Breakout | Enduro | Space Invaders |
+|:---: | :---: | :---: |
+|![](assets/Breakout.gif) | ![](assets/Enduro.gif) | ![](assets/SpaceInvaders.gif) |
+
 
 ## Game Score
 DQN agent were tranined for 10 milion frames. Scores for each game are average over 10 episodes.
