@@ -10,16 +10,18 @@ gym                 0.21.0
 ale-py              0.7.3
 torch               1.10.0
 torchvision         0.11.1
+tensorboard         2.3.0
+tensorboardX        1.8
 ```
 
 ## Results
-## Video
+### Video
 | Breakout | Enduro | Space Invaders |
 |:---: | :---: | :---: |
 |![](assets/Breakout.gif) | ![](assets/Enduro.gif) | ![](assets/SpaceInvaders.gif) |
 
 
-## Game Score
+### Game Score
 DQN agent were trained for 10 million frames. Scores for each game are average over 10 episodes.
 
 After training, run
@@ -50,7 +52,7 @@ In this project used 6 environments (Breakout, Space Invaders, Boxing, Pong, End
 - To get more infomation about ALE, check [docs](https://github.com/mgbellemare/Arcade-Learning-Environment/tree/master/docs), [blog](https://github.com/mgbellemare/Arcade-Learning-Environment)
 
 ## Train
-Run `python train.py --env CartPole-v0` to test if the algorithm works in relative simple environment.
+After placing ROMs in [`ROMS`](ROMS) directory and verified it is supported by ALE, run `python train.py --env {env_name}` to train a DQN agent (e.g. `python train.py --env ALE/Seaquest-v5`). Logs such as Loss, episode reward, exploration factor (epsilon) and others will be logged under [`log`](log) directory (or you can give specify using `--log-dir {path_to_dir}` flags). Check [`config.yaml`](config.yaml) for training configuration and [`parse_utils.py`](parse_utils.py) for flags.
 
 ## References
 ### Paper
