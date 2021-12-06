@@ -30,15 +30,18 @@ Space Invaders | 313.0 (118.4)
 
 
 ## ROMs
-- Download Atari 2600 [roms](http://www.atarimania.com/rom_collection_archive_atari_2600_roms.html), unzip, place files below in [`ROMS`](ROMS) directory.
+- You can  download Atari 2600 [roms](http://www.atarimania.com/rom_collection_archive_atari_2600_roms.html), unzip, place files below in [`ROMS`](ROMS) directory. Note that not all ROMS are supported by ALE. After placing ROM file, you can run `ale-import-roms ROMS` to check the ROM is supported.
+
+In this project used 6 environments (Breakout, Space Invaders, Boxing, Pong, Enduro, Seaquest). For your information, ROMs that I tested are listed below.
+
+**List of supported ROM for ALE**
+
 	- Breakout - Breakaway IV (Paddle) (1978) (Atari, Brad Stewart - Sears) (CX2622 - 6-99813, 49-75107) ~.bin
-	-  Space Invaders (1980) (Atari, Richard Maurer - Sears) (CX2632 - 49-75153) ~.bin
+	- Space Invaders (1980) (Atari, Richard Maurer - Sears) (CX2632 - 49-75153) ~.bin
 	- Boxing - La Boxe (1980) (Activision, Bob Whitehead) (AG-002, CAG-002, AG-002-04) ~.bin
 	- Pong - Video Olympics - Pong Sports (Paddle) (1977) (Atari, Joe Decuir - Sears) (CX2621 - 99806, 6-99806, 49-75104) ~.bin
 	- Enduro - Enduro (1983) (Activision, Larry Miller) (AX-026, AX-026-04) ~.bin
-- Run `ale-import-roms ROMS` to check every ROM is supported.
-- Run `python env_test.py --env {ALE_ENV}` to check if you can create an environment successfully. e.g. `python env_test.py --env ALE/SpaceInvaders-v5`
-- This project use 3 environments, but you can add more if you want. Note there are various distribution of same game (Boxing for example, "Boxing (Unknown) (PAL).bin", "Boxing (Dactari - Milmar).bin", "Boxing (1983) (CCE) (C-861).bin" ...), make sure it is supported by ALE. (FYI, I just placed distributions one by one in ROMS folder and ran `ale-import-roms ROMS` command to check whether it is supported).
+	- Seaquest - Seaquest (1983) (Activision, Steve Cartwright) (AX-022) ~.bin
 - To get more infomation about ALE, check [docs](https://github.com/mgbellemare/Arcade-Learning-Environment/tree/master/docs), [blog](https://github.com/mgbellemare/Arcade-Learning-Environment)
 
 ## Train
